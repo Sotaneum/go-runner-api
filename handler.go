@@ -165,7 +165,6 @@ func (h *Handler) Active(c *gin.Context) {
 	active := getActive(c)
 
 	h.active = active
-	h.FileSystem.Push()
 
 	ResponseData(c, "ok")
 }
