@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	ginsession "github.com/go-session/gin-session"
 	"github.com/google/uuid"
@@ -24,6 +23,9 @@ func New(options map[string]string) *Handler {
 	handler.config = options
 	handler.RunnerChan = make(chan []runner.RunnerInterface)
 	handler.active = true
+
+	go logPrint(options["path"], runner.NewRunner(handler.RunnerChan))
+	go fetchJob(options["path"], handler.RunnerChan)
 
 	return handler
 }
@@ -189,7 +191,7 @@ func getHook(id, path string) (string, error) {
 	return userConfig.Hook, nil
 }
 
-func FetchJob(path string, runnerChan chan []runner.RunnerInterface) {
+func fetchJob(path string, runnerChan chan []runner.RunnerInterface) {
 	jobList, err := requestjob.NewList(path + "/job")
 
 	if err != nil {
@@ -205,7 +207,7 @@ func FetchJob(path string, runnerChan chan []runner.RunnerInterface) {
 	runnerChan <- runnerList
 }
 
-func LogPrint(path string, run *runner.Runner) {
+func logPrint(path string, run *runner.Runner) {
 	for {
 		res := <-run.ResultCh
 		if len(res) > 0 {
@@ -213,19 +215,5 @@ func LogPrint(path string, run *runner.Runner) {
 				logger.New(path+"/log", id+".json").Add(resData)
 			}
 		}
-	}
-}
-
-func Update(fileSystem FileSystem) {
-	target := 10 * 60
-	term := 1
-	for {
-		if term >= target {
-			fileSystem.Push()
-			fmt.Println("저장되었습니다.", term, target)
-			term = 0
-		}
-		term = term + 1
-		time.Sleep(time.Second * 1)
 	}
 }

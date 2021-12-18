@@ -103,7 +103,7 @@ func (h *Handler) UpdateJob(c *gin.Context) {
 
 	jobObj.Save(h.config["path"] + "/job")
 
-	go FetchJob(h.config["path"], h.RunnerChan)
+	go fetchJob(h.config["path"], h.RunnerChan)
 
 	ResponseData(c, jobObj.GetID())
 }
@@ -144,7 +144,7 @@ func (h *Handler) DeleteJob(c *gin.Context) {
 
 	logger.New(h.config["path"]+"/log", jobID+".json").Remove()
 
-	go FetchJob(h.config["path"], h.RunnerChan)
+	go fetchJob(h.config["path"], h.RunnerChan)
 
 	ResponseCompleteRemoveJob(c)
 }
