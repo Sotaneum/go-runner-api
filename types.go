@@ -21,14 +21,10 @@ type JobInterface interface {
 	Save(path string)
 }
 
-type Job struct {
-	JobInterface
-}
-
 type JobControlInterface interface {
-	NewList(path string) ([]*Job, error)
-	NewByJSON(data, owner string) (*Job, error)
-	NewByFile(path, name, owner string) (*Job, error)
+	NewList(path string) ([]*JobInterface, error)
+	NewByJSON(data, owner string) (*JobInterface, error)
+	NewByFile(path, name, owner string) (*JobInterface, error)
 }
 
 type Handler struct {
@@ -49,7 +45,7 @@ type UserConfig struct {
 }
 
 type ResponseJobList struct {
-	Owner  []*Job `json:"owner"`
-	Editor []*Job `json:"editor"`
-	Admin  []*Job `json:"admin"`
+	Owner  []*JobInterface `json:"owner"`
+	Editor []*JobInterface `json:"editor"`
+	Admin  []*JobInterface `json:"admin"`
 }
