@@ -6,8 +6,6 @@ github.com/Sotaneum/go-kst-time v0.0.0-20210917180837-4af7bba542bc h1:vLFTyeBlR4
 github.com/Sotaneum/go-kst-time v0.0.0-20210917180837-4af7bba542bc/go.mod h1:Q+kh1LMunMi/EGYAdr2YXJMJgOGQNFHOdVMeZLVaa8g=
 github.com/Sotaneum/go-logger v0.0.0-20210918005558-a64c2781a1c6 h1:dwfXmRqBayyJgEHBgp3dvbbtHxY9wWg300/LXUnfayw=
 github.com/Sotaneum/go-logger v0.0.0-20210918005558-a64c2781a1c6/go.mod h1:NIFUBCjoyUS8O3vQaRw1YHXjv+m9LTkqC7G4BgmICaw=
-github.com/Sotaneum/go-request-job v0.0.1 h1:tJBkaskdimhv5s7qm2XzmHXDl6BB4241P3zXRLcf3t8=
-github.com/Sotaneum/go-request-job v0.0.1/go.mod h1:rDVT6Cee63oTfPcyyLoOYegUxAZIT50SoxMu916vOXs=
 github.com/Sotaneum/go-runner v0.0.0-20210918042018-43db94d53a95 h1:3iU8zqkl9J0LoxL0HggoPL2qFm6cEhnO1uYMBk4j+P8=
 github.com/Sotaneum/go-runner v0.0.0-20210918042018-43db94d53a95/go.mod h1:eakFkpzaZxL9VN9+mGGRpEf4ui2T574cOYJQHZ27nVk=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=

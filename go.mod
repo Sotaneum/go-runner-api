@@ -6,7 +6,6 @@ require (
 	github.com/Sotaneum/go-create-folder v0.0.1
 	github.com/Sotaneum/go-json-file v0.0.0-20210918004840-2b44ab774ac1
 	github.com/Sotaneum/go-logger v0.0.0-20210918005558-a64c2781a1c6
-	github.com/Sotaneum/go-request-job v0.0.1
 	github.com/Sotaneum/go-runner v0.0.0-20210918042018-43db94d53a95
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-session/gin-session v3.1.0+incompatible
