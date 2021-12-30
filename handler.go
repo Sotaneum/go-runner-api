@@ -18,14 +18,28 @@ func (h *Handler) GetJobList(c *gin.Context) {
 		return
 	}
 
-	jobList, fetchJobListErr := getJobList(h.config["path"], userID)
+	jobList, fetchJobListErr := getJobList(h.config["path"], userID, userID == h.config["adminId"])
+
+	responseData := ResponseJobList{}
+
+	for _, job := range jobList {
+		if job.HasAdminAuthorization(userID) {
+			responseData.Owner = append(responseData.Owner, job)
+			continue
+		}
+		if job.HasAuthorization(userID) {
+			responseData.Editor = append(responseData.Editor, job)
+			continue
+		}
+		responseData.Admin = append(responseData.Admin, job)
+	}
 
 	if fetchJobListErr != nil {
 		ResposeServerError(c)
 		return
 	}
 
-	ResponseData(c, jobList)
+	ResponseData(c, responseData)
 }
 
 func (h *Handler) GetLogs(c *gin.Context) {

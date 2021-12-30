@@ -1,6 +1,7 @@
 package handler
 
 import (
+	requestjob "github.com/Sotaneum/go-request-job"
 	runner "github.com/Sotaneum/go-runner"
 )
 
@@ -23,4 +24,10 @@ type User struct {
 
 type UserConfig struct {
 	Hook string `json:"hook"`
+}
+
+type ResponseJobList struct {
+	Owner  []*requestjob.RequestJob `json:"owner"`
+	Editor []*requestjob.RequestJob `json:"editor"`
+	Admin  []*requestjob.RequestJob `json:"admin"`
 }

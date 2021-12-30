@@ -118,7 +118,8 @@ func getJob(c *gin.Context, userID string) (*requestjob.RequestJob, error) {
 	return jobObj, nil
 }
 
-func getJobList(path, userID string) ([]*requestjob.RequestJob, error) {
+// force 값은 사용자의 권한과 상관없이 불러옵니다.
+func getJobList(path, userID string, force bool) ([]*requestjob.RequestJob, error) {
 	jobList, err := requestjob.NewList(path + "/job")
 	if err != nil {
 		return nil, err
@@ -127,7 +128,7 @@ func getJobList(path, userID string) ([]*requestjob.RequestJob, error) {
 	authJobList := []*requestjob.RequestJob{}
 
 	for _, jobObj := range jobList {
-		if jobObj.HasAuthorization(userID) {
+		if force || jobObj.HasAuthorization(userID) {
 			authJobList = append(authJobList, jobObj)
 		}
 	}
