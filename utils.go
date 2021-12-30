@@ -16,17 +16,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func New(options map[string]string) *Handler {
-	handler := new(Handler)
-	handler.config = options
-	handler.active = true
-	handler.SetRunnerChan(make(chan []runner.RunnerInterface))
-
-	go logPrint(options["path"], runner.NewRunner(handler.GetRunnerChan()))
-
-	return handler
-}
-
 func decodeAuthorization(c *gin.Context) (string, string, error) {
 	auth := c.Request.Header.Get("Authorization")
 	if auth == "" {

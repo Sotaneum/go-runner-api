@@ -9,6 +9,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func (h *Handler) Initialize(options map[string]string) *Handler {
+	h.config = options
+	h.active = true
+	h.runnerChan = make(chan []runner.RunnerInterface)
+
+	go h.fetchJob()
+
+	if h.config["logDisable"] != "true" {
+		go logPrint(h.config["path"], runner.NewRunner(h.runnerChan))
+	}
+
+	return h
+}
+
 func (h *Handler) GetJobList(c *gin.Context) {
 	if !h.active {
 		ResponseMaintenance(c)
@@ -242,15 +256,6 @@ func (h *Handler) ReHookID(c *gin.Context) {
 	}
 
 	ResponseData(c, hook)
-}
-
-func (h *Handler) SetRunnerChan(runnerChan chan []runner.RunnerInterface) {
-	h.runnerChan = runnerChan
-	go h.fetchJob()
-}
-
-func (h *Handler) GetRunnerChan() chan []runner.RunnerInterface {
-	return h.runnerChan
 }
 
 func (h *Handler) LoadJobList() ([]*requestjob.RequestJob, error) {
