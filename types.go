@@ -14,7 +14,7 @@ type Handler struct {
 	SSO        SSO
 	config     map[string]string
 	active     bool
-	RunnerChan chan []runner.RunnerInterface
+	runnerChan chan []runner.RunnerInterface
 }
 
 // User : 사용자 정보

@@ -14,18 +14,15 @@ import (
 	"github.com/Sotaneum/go-logger"
 	"github.com/Sotaneum/go-runner"
 	"github.com/gin-gonic/gin"
-
-	requestjob "github.com/Sotaneum/go-request-job"
 )
 
 func New(options map[string]string) *Handler {
 	handler := new(Handler)
 	handler.config = options
-	handler.RunnerChan = make(chan []runner.RunnerInterface)
 	handler.active = true
+	handler.SetRunnerChan(make(chan []runner.RunnerInterface))
 
-	go logPrint(options["path"], runner.NewRunner(handler.RunnerChan))
-	go fetchJob(options["path"], handler.RunnerChan)
+	go logPrint(options["path"], runner.NewRunner(handler.GetRunnerChan()))
 
 	return handler
 }
@@ -74,66 +71,6 @@ func getUserID(c *gin.Context, path string) (string, bool) {
 func getJobID(c *gin.Context) (string, bool) {
 	ID := c.Request.URL.Query().Get("id")
 	return ID, ID != ""
-}
-
-func getJobFile(path, id, userID string) (*requestjob.RequestJob, error) {
-	jobObj, err := requestjob.NewByFile(path+"/job", id+".json", "")
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !jobObj.HasAuthorization(userID) {
-		return nil, requestjob.ErrorNoAuthorization
-	}
-
-	return jobObj, nil
-}
-
-func getJob(c *gin.Context, userID string) (*requestjob.RequestJob, error) {
-
-	var data interface{}
-	err := c.ShouldBindJSON(&data)
-
-	if err != nil {
-		return nil, requestjob.ErrorCantCreateJob
-	}
-
-	parse, parseErr := json.Marshal(data)
-
-	if parseErr != nil {
-		return nil, requestjob.ErrorCantCreateJob
-	}
-
-	jobObj, jobErr := requestjob.NewByJSON(string(parse), "")
-
-	if jobErr != nil {
-		return nil, requestjob.ErrorCantCreateJob
-	}
-
-	if !jobObj.HasAuthorization(userID) {
-		return nil, requestjob.ErrorNoAuthorization
-	}
-
-	return jobObj, nil
-}
-
-// force 값은 사용자의 권한과 상관없이 불러옵니다.
-func getJobList(path, userID string, force bool) ([]*requestjob.RequestJob, error) {
-	jobList, err := requestjob.NewList(path + "/job")
-	if err != nil {
-		return nil, err
-	}
-
-	authJobList := []*requestjob.RequestJob{}
-
-	for _, jobObj := range jobList {
-		if force || jobObj.HasAuthorization(userID) {
-			authJobList = append(authJobList, jobObj)
-		}
-	}
-
-	return authJobList, nil
 }
 
 func getActive(c *gin.Context) bool {
@@ -190,22 +127,6 @@ func getHook(id, path string) (string, error) {
 	}
 
 	return userConfig.Hook, nil
-}
-
-func fetchJob(path string, runnerChan chan []runner.RunnerInterface) {
-	jobList, err := requestjob.NewList(path + "/job")
-
-	if err != nil {
-		panic(err)
-	}
-
-	runnerList := []runner.RunnerInterface{}
-
-	for _, jobObj := range jobList {
-		runnerList = append(runnerList, jobObj)
-	}
-
-	runnerChan <- runnerList
 }
 
 func logPrint(path string, run *runner.Runner) {
