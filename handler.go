@@ -14,8 +14,12 @@ func (h *Handler) Initialize(options map[string]string, jobControlInterface inte
 		return nil
 	}
 
-	control := jobControlInterface.(JobControlInterface)
-	auth := authInterface.(AuthInterface)
+	control, okControl := jobControlInterface.(JobControlInterface)
+	auth, okAuth := authInterface.(AuthInterface)
+
+	if !okControl || !okAuth {
+		return nil
+	}
 
 	h.config = options
 	h.active = true
