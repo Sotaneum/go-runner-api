@@ -5,19 +5,23 @@ import (
 
 	"github.com/Sotaneum/go-logger"
 	runner "github.com/Sotaneum/go-runner"
+	runnerjob "github.com/Sotaneum/go-runner-job"
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) Initialize(options map[string]string, jobControl *JobControlInterface, auth *AuthInterface) *Handler {
-	if jobControl == nil || auth == nil {
+func (h *Handler) Initialize(options map[string]string, jobControlInterface interface{}, authInterface interface{}) *Handler {
+	if jobControlInterface == nil || authInterface == nil {
 		return nil
 	}
 
+	control := jobControlInterface.(JobControlInterface)
+	auth := authInterface.(AuthInterface)
+
 	h.config = options
 	h.active = true
-	h.jobControl = *jobControl
-	h.auth = *auth
-	h.runnerChan = make(chan []runner.RunnerInterface)
+	h.jobControl = control
+	h.auth = auth
+	h.runnerChan = make(chan []runner.JobInterface)
 
 	go h.fetchJob()
 
@@ -43,9 +47,16 @@ func (h *Handler) GetJobList(c *gin.Context) {
 
 	jobList, fetchJobListErr := h.getJobList(userID)
 
+	jList, ok := jobList.([]*runnerjob.BaseJob)
+
+	if !ok {
+		ResposeParamsError(c)
+		return
+	}
+
 	responseData := ResponseJobList{}
 
-	for _, job := range jobList {
+	for _, job := range jList {
 		if (*job).HasAdminAuthorization(userID) {
 			responseData.Owner = append(responseData.Owner, job)
 			continue
@@ -138,11 +149,18 @@ func (h *Handler) UpdateJob(c *gin.Context) {
 		return
 	}
 
-	(*jobObj).Save(h.config["path"] + "/job")
+	obj, ok := jobObj.(runnerjob.BaseJob)
+
+	if !ok {
+		ResposeParamsError(c)
+		return
+	}
+
+	obj.Save(h.config["path"] + "/job")
 
 	go h.fetchJob()
 
-	ResponseData(c, (*jobObj).GetID())
+	ResponseData(c, obj.GetID())
 }
 
 func (h *Handler) DeleteJob(c *gin.Context) {
@@ -167,12 +185,19 @@ func (h *Handler) DeleteJob(c *gin.Context) {
 
 	jobObj, jobObjErr := h.getJobFile(jobID, userID)
 
-	if jobObjErr != nil || !(*jobObj).HasAdminAuthorization(userID) {
+	obj, ok := jobObj.(runnerjob.BaseJob)
+
+	if !ok {
+		ResposeParamsError(c)
+		return
+	}
+
+	if jobObjErr != nil || !obj.HasAdminAuthorization(userID) {
 		ResponseNoAuthorization(c)
 		return
 	}
 
-	err := (*jobObj).Remove(h.config["path"] + "/job")
+	err := obj.Remove(h.config["path"] + "/job")
 
 	if err != nil {
 		ResponseCantRemoveJob(c)
@@ -263,16 +288,51 @@ func (h *Handler) ReHookID(c *gin.Context) {
 	ResponseData(c, hook)
 }
 
-func (h *Handler) loadJobList() ([]*JobInterface, error) {
-	return h.jobControl.NewList(h.config["path"] + "/job")
+func (h *Handler) loadJobList() ([]*runnerjob.BaseJob, error) {
+	data, err := h.jobControl.NewList(h.config["path"] + "/job") //.([]*runnerjob.BaseJob)
+	if err != nil {
+		return nil, err
+	}
+
+	jobList := []*runnerjob.BaseJob{}
+
+	for _, item := range data {
+		job, ok := item.(*runnerjob.BaseJob)
+		if !ok {
+			continue
+		}
+		jobList = append(jobList, job)
+	}
+
+	return jobList, nil
 }
 
-func (h *Handler) loadJobJSON(data string, owner string) (*JobInterface, error) {
-	return h.jobControl.NewByJSON(data, owner)
+func (h *Handler) loadJobJSON(data string, owner string) (*runnerjob.BaseJob, error) {
+	job, err := h.jobControl.NewByJSON(data, owner)
+	if err != nil {
+		return nil, err
+	}
+
+	jobObj, ok := (*job).(*runnerjob.BaseJob)
+
+	if !ok {
+		return nil, ErrorJob
+	}
+	return jobObj, nil
 }
 
-func (h *Handler) loadJobFile(id string) (*JobInterface, error) {
-	return h.jobControl.NewByFile(h.config["path"]+"/job", id+".json", "")
+func (h *Handler) loadJobFile(id string) (*runnerjob.BaseJob, error) {
+	job, err := h.jobControl.NewByFile(h.config["path"]+"/job", id+".json", "")
+	if err != nil {
+		return nil, err
+	}
+
+	jobObj, ok := (*job).(*runnerjob.BaseJob)
+
+	if !ok {
+		return nil, ErrorJob
+	}
+	return jobObj, nil
 }
 
 func (h *Handler) fetchJob() {
@@ -282,16 +342,16 @@ func (h *Handler) fetchJob() {
 		panic(err)
 	}
 
-	runnerList := []runner.RunnerInterface{}
+	runnerList := []runner.JobInterface{}
 
 	for _, jobObj := range jobList {
-		runnerList = append(runnerList, *jobObj)
+		runnerList = append(runnerList, jobObj.JobInterface)
 	}
 
 	h.runnerChan <- runnerList
 }
 
-func (h *Handler) getJobFile(id, userID string) (*JobInterface, error) {
+func (h *Handler) getJobFile(id, userID string) (interface{}, error) {
 	jobObj, err := h.loadJobFile(id)
 
 	if err != nil {
@@ -305,7 +365,7 @@ func (h *Handler) getJobFile(id, userID string) (*JobInterface, error) {
 	return jobObj, nil
 }
 
-func (h *Handler) getJob(c *gin.Context, userID string) (*JobInterface, error) {
+func (h *Handler) getJob(c *gin.Context, userID string) (interface{}, error) {
 
 	var data interface{}
 	err := c.ShouldBindJSON(&data)
@@ -333,13 +393,13 @@ func (h *Handler) getJob(c *gin.Context, userID string) (*JobInterface, error) {
 	return jobObj, nil
 }
 
-func (h *Handler) getJobList(userID string) ([]*JobInterface, error) {
+func (h *Handler) getJobList(userID string) (interface{}, error) {
 	jobList, err := h.loadJobList()
 	if err != nil {
 		return nil, err
 	}
 
-	authJobList := []*JobInterface{}
+	authJobList := []*runnerjob.BaseJob{}
 
 	force := userID == h.config["adminId"]
 

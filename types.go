@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"time"
-
 	runner "github.com/Sotaneum/go-runner"
 )
 
@@ -11,20 +9,10 @@ type AuthInterface interface {
 	GetUser(code string, user interface{}) error
 }
 
-type JobInterface interface {
-	HasAuthorization(userID string) bool
-	HasAdminAuthorization(userID string) bool
-	IsRun(t time.Time) bool
-	GetID() string
-	Run() interface{}
-	Remove(path string) error
-	Save(path string)
-}
-
 type JobControlInterface interface {
-	NewList(path string) ([]*JobInterface, error)
-	NewByJSON(data, owner string) (*JobInterface, error)
-	NewByFile(path, name, owner string) (*JobInterface, error)
+	NewList(path string) ([]interface{}, error)
+	NewByJSON(data, owner string) (*interface{}, error)
+	NewByFile(path, name, owner string) (*interface{}, error)
 }
 
 type Handler struct {
@@ -32,7 +20,7 @@ type Handler struct {
 	jobControl JobControlInterface
 	config     map[string]string
 	active     bool
-	runnerChan chan []runner.RunnerInterface
+	runnerChan chan []runner.JobInterface
 }
 
 // User : 사용자 정보
@@ -45,7 +33,7 @@ type UserConfig struct {
 }
 
 type ResponseJobList struct {
-	Owner  []*JobInterface `json:"owner"`
-	Editor []*JobInterface `json:"editor"`
-	Admin  []*JobInterface `json:"admin"`
+	Owner  []interface{} `json:"owner"`
+	Editor []interface{} `json:"editor"`
+	Admin  []interface{} `json:"admin"`
 }
