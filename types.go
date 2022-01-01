@@ -10,9 +10,9 @@ type AuthInterface interface {
 }
 
 type JobControlInterface interface {
-	NewList(path string) ([]interface{}, error)
-	NewByJSON(data, owner string) (*interface{}, error)
-	NewByFile(path, name, owner string) (*interface{}, error)
+	NewList(path string) (interface{}, error)
+	NewByJSON(data, owner string) (interface{}, error)
+	NewByFile(path, name, owner string) (interface{}, error)
 }
 
 type Handler struct {

@@ -294,14 +294,10 @@ func (h *Handler) loadJobList() ([]*runnerjob.BaseJob, error) {
 		return nil, err
 	}
 
-	jobList := []*runnerjob.BaseJob{}
+	jobList, ok := data.([]*runnerjob.BaseJob)
 
-	for _, item := range data {
-		job, ok := item.(*runnerjob.BaseJob)
-		if !ok {
-			continue
-		}
-		jobList = append(jobList, job)
+	if !ok {
+		return nil, ErrorJob
 	}
 
 	return jobList, nil
@@ -313,7 +309,7 @@ func (h *Handler) loadJobJSON(data string, owner string) (*runnerjob.BaseJob, er
 		return nil, err
 	}
 
-	jobObj, ok := (*job).(*runnerjob.BaseJob)
+	jobObj, ok := job.(*runnerjob.BaseJob)
 
 	if !ok {
 		return nil, ErrorJob
@@ -327,7 +323,7 @@ func (h *Handler) loadJobFile(id string) (*runnerjob.BaseJob, error) {
 		return nil, err
 	}
 
-	jobObj, ok := (*job).(*runnerjob.BaseJob)
+	jobObj, ok := job.(*runnerjob.BaseJob)
 
 	if !ok {
 		return nil, ErrorJob
