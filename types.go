@@ -11,9 +11,9 @@ type AuthInterface interface {
 }
 
 type JobControlInterface interface {
-	NewList(path string) ([]*runnerjob.BaseJobInterface, error)
-	NewByJSON(data, owner string) (*runnerjob.BaseJobInterface, error)
-	NewByFile(path, name, owner string) (*runnerjob.BaseJobInterface, error)
+	NewList(path string) ([]runnerjob.BaseJobInterface, error)
+	NewByJSON(data, owner string) (runnerjob.BaseJobInterface, error)
+	NewByFile(path, name, owner string) (runnerjob.BaseJobInterface, error)
 }
 
 type Handler struct {
