@@ -14,8 +14,8 @@ require (
 
 require (
 	github.com/Sotaneum/go-kst-time v0.0.0-20210917180837-4af7bba542bc // indirect
-	github.com/Sotaneum/go-request-job v0.0.2-beta // indirect
-	github.com/Sotaneum/go-runner-job v0.0.4-beta // indirect
+	github.com/Sotaneum/go-request-job v0.0.4-beta3 // indirect
+	github.com/Sotaneum/go-runner-job v0.0.4-beta2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect

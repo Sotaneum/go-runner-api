@@ -2,6 +2,7 @@ package handler
 
 import (
 	runner "github.com/Sotaneum/go-runner"
+	runnerjob "github.com/Sotaneum/go-runner-job"
 )
 
 type AuthInterface interface {
@@ -10,9 +11,9 @@ type AuthInterface interface {
 }
 
 type JobControlInterface interface {
-	NewList(path string) (interface{}, error)
-	NewByJSON(data, owner string) (interface{}, error)
-	NewByFile(path, name, owner string) (interface{}, error)
+	NewList(path string) ([]*runnerjob.BaseJobInterface, error)
+	NewByJSON(data, owner string) (*runnerjob.BaseJobInterface, error)
+	NewByFile(path, name, owner string) (*runnerjob.BaseJobInterface, error)
 }
 
 type Handler struct {
@@ -33,7 +34,7 @@ type UserConfig struct {
 }
 
 type ResponseJobList struct {
-	Owner  []interface{} `json:"owner"`
-	Editor []interface{} `json:"editor"`
-	Admin  []interface{} `json:"admin"`
+	Owner  []runnerjob.BaseJobInterface `json:"owner"`
+	Editor []runnerjob.BaseJobInterface `json:"editor"`
+	Admin  []runnerjob.BaseJobInterface `json:"admin"`
 }
