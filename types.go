@@ -6,7 +6,7 @@ import (
 	runner "github.com/Sotaneum/go-runner"
 )
 
-type SSO interface {
+type AuthInterface interface {
 	GetLoginRedirectURL() string
 	GetUser(code string, user interface{}) error
 }
@@ -28,11 +28,11 @@ type JobControlInterface interface {
 }
 
 type Handler struct {
-	SSO        SSO
+	auth       AuthInterface
+	jobControl JobControlInterface
 	config     map[string]string
 	active     bool
 	runnerChan chan []runner.RunnerInterface
-	jobControl JobControlInterface
 }
 
 // User : 사용자 정보

@@ -8,10 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) Initialize(options map[string]string, jobControl JobControlInterface) *Handler {
+func (h *Handler) Initialize(options map[string]string, jobControl *JobControlInterface, auth *AuthInterface) *Handler {
+	if jobControl == nil || auth == nil {
+		return nil
+	}
+
 	h.config = options
 	h.active = true
-	h.jobControl = jobControl
+	h.jobControl = *jobControl
+	h.auth = *auth
 	h.runnerChan = make(chan []runner.RunnerInterface)
 
 	go h.fetchJob()
@@ -258,20 +263,20 @@ func (h *Handler) ReHookID(c *gin.Context) {
 	ResponseData(c, hook)
 }
 
-func (h *Handler) LoadJobList() ([]*JobInterface, error) {
+func (h *Handler) loadJobList() ([]*JobInterface, error) {
 	return h.jobControl.NewList(h.config["path"] + "/job")
 }
 
-func (h *Handler) LoadJobJSON(data string, owner string) (*JobInterface, error) {
+func (h *Handler) loadJobJSON(data string, owner string) (*JobInterface, error) {
 	return h.jobControl.NewByJSON(data, owner)
 }
 
-func (h *Handler) LoadJobFile(id string) (*JobInterface, error) {
+func (h *Handler) loadJobFile(id string) (*JobInterface, error) {
 	return h.jobControl.NewByFile(h.config["path"]+"/job", id+".json", "")
 }
 
 func (h *Handler) fetchJob() {
-	jobList, err := h.LoadJobList()
+	jobList, err := h.loadJobList()
 
 	if err != nil {
 		panic(err)
@@ -287,7 +292,7 @@ func (h *Handler) fetchJob() {
 }
 
 func (h *Handler) getJobFile(id, userID string) (*JobInterface, error) {
-	jobObj, err := h.LoadJobFile(id)
+	jobObj, err := h.loadJobFile(id)
 
 	if err != nil {
 		return nil, err
@@ -315,7 +320,7 @@ func (h *Handler) getJob(c *gin.Context, userID string) (*JobInterface, error) {
 		return nil, ErrorJob
 	}
 
-	jobObj, jobErr := h.LoadJobJSON(string(parse), "")
+	jobObj, jobErr := h.loadJobJSON(string(parse), "")
 
 	if jobErr != nil {
 		return nil, ErrorJob
@@ -329,7 +334,7 @@ func (h *Handler) getJob(c *gin.Context, userID string) (*JobInterface, error) {
 }
 
 func (h *Handler) getJobList(userID string) ([]*JobInterface, error) {
-	jobList, err := h.LoadJobList()
+	jobList, err := h.loadJobList()
 	if err != nil {
 		return nil, err
 	}
