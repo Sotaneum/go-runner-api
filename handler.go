@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/Sotaneum/go-logger"
 	runner "github.com/Sotaneum/go-runner"
@@ -10,21 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) Initialize(options map[string]string, jobControlInterface interface{}, authInterface interface{}) *Handler {
-	if jobControlInterface == nil || authInterface == nil {
-		return nil
-	}
-
-	control, okControl := jobControlInterface.(JobControlInterface)
-	auth, okAuth := authInterface.(AuthInterface)
-
-	if !okControl || !okAuth {
+func (h *Handler) Initialize(options map[string]string, jobControl JobControlInterface, auth AuthInterface) *Handler {
+	if jobControl == nil || auth == nil {
 		return nil
 	}
 
 	h.config = options
 	h.active = true
-	h.jobControl = control
+	h.jobControl = jobControl
 	h.auth = auth
 	h.runnerChan = make(chan []runner.JobInterface)
 
@@ -55,7 +47,6 @@ func (h *Handler) GetJobList(c *gin.Context) {
 	responseData := ResponseJobList{}
 
 	for _, job := range jobList {
-		fmt.Println(job)
 		if job.HasAdminAuthorization(userID) {
 			responseData.Owner = append(responseData.Owner, job)
 			continue
@@ -148,18 +139,11 @@ func (h *Handler) UpdateJob(c *gin.Context) {
 		return
 	}
 
-	obj, ok := jobObj.(runnerjob.BaseJobInterface)
-
-	if !ok {
-		ResposeParamsError(c)
-		return
-	}
-
-	obj.Save(h.config["path"] + "/job")
+	jobObj.Save(h.config["path"] + "/job")
 
 	go h.fetchJob()
 
-	ResponseData(c, obj.GetID())
+	ResponseData(c, jobObj.GetID())
 }
 
 func (h *Handler) DeleteJob(c *gin.Context) {
@@ -184,19 +168,12 @@ func (h *Handler) DeleteJob(c *gin.Context) {
 
 	jobObj, jobObjErr := h.getJobFile(jobID, userID)
 
-	obj, ok := jobObj.(runnerjob.BaseJobInterface)
-
-	if !ok {
-		ResposeParamsError(c)
-		return
-	}
-
-	if jobObjErr != nil || !obj.HasAdminAuthorization(userID) {
+	if jobObjErr != nil || !jobObj.HasAdminAuthorization(userID) {
 		ResponseNoAuthorization(c)
 		return
 	}
 
-	err := obj.Remove(h.config["path"] + "/job")
+	err := jobObj.Remove(h.config["path"] + "/job")
 
 	if err != nil {
 		ResponseCantRemoveJob(c)
@@ -315,7 +292,7 @@ func (h *Handler) fetchJob() {
 	h.runnerChan <- runnerList
 }
 
-func (h *Handler) getJobFile(id, userID string) (interface{}, error) {
+func (h *Handler) getJobFile(id, userID string) (runnerjob.BaseJobInterface, error) {
 	jobObj, err := h.loadJobFile(id)
 
 	if err != nil {
@@ -329,7 +306,7 @@ func (h *Handler) getJobFile(id, userID string) (interface{}, error) {
 	return jobObj, nil
 }
 
-func (h *Handler) getJob(c *gin.Context, userID string) (interface{}, error) {
+func (h *Handler) getJob(c *gin.Context, userID string) (runnerjob.BaseJobInterface, error) {
 
 	var data interface{}
 	err := c.ShouldBindJSON(&data)
